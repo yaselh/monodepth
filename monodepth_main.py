@@ -84,9 +84,10 @@ def train(params):
         start_learning_rate = args.learning_rate
 
         boundaries = [np.int32((3/5) * num_total_steps), np.int32((4/5) * num_total_steps)]
+        
         values = [args.learning_rate, args.learning_rate / 2, args.learning_rate / 4]
         learning_rate = tf.train.piecewise_constant(global_step, boundaries, values)
-
+        
         opt_step = tf.train.AdamOptimizer(learning_rate)
 
         print("total number of samples: {}".format(num_training_samples))

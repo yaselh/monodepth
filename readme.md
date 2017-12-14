@@ -65,6 +65,11 @@ You can monitor the learning process using `tensorboard` and pointing it to your
 By default the model only saves a reduced summary to save disk space, you can disable this using `--full_summary`.  
 Please look at the [main file](monodepth_main.py) for all the available options.
 
+example of running the training the model with resnet50 in 8 gpus with batch size of 8:
+```shell
+python monodepth_main.py --mode train --model_name resnet50 --data_path /disk/ml/datasets/KITTI/object/data/training/ --num_gpus 8 --batch_size 8 --filenames utils/filenames/kitti_train_files.txt --log_directory ~/tmp/ 
+```
+
 ## Testing  
 To test change the `--mode` flag to `test`, the network will output the disparities in the model folder or in any other folder you specify wiht `--output_directory`.  
 You will also need to load the checkpoint you want to test on, this can be done with `--checkpoint_path`:  
