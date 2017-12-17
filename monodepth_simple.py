@@ -22,6 +22,8 @@ import tensorflow.contrib.slim as slim
 import scipy.misc
 import matplotlib.pyplot as plt
 
+from skimage.transform import resize
+from skimage.io import imread
 from monodepth_model import *
 from monodepth_dataloader import *
 from average_gradients import *
@@ -48,14 +50,13 @@ def post_process_disparity(disp):
 
 def test_simple(params):
     """Test function."""
-
+    tf.reset_default_graph()
     left  = tf.placeholder(tf.float32, [2, args.input_height, args.input_width, 3])
     model = MonodepthModel(params, "test", left, None)
 
-    input_image = scipy.misc.imread(args.image_path, mode="RGB")
+    input_image = imread(args.image_path, mode="RGB")
     original_height, original_width, num_channels = input_image.shape
-    input_image = scipy.misc.imresize(input_image, [args.input_height, args.input_width], interp='lanczos')
-    input_image = input_image.astype(np.float32) / 255
+    input_image = resize(input_image, (args.input_height, args.input_width))
     input_images = np.stack((input_image, np.fliplr(input_image)), 0)
 
     # SESSION
@@ -72,7 +73,7 @@ def test_simple(params):
     threads = tf.train.start_queue_runners(sess=sess, coord=coordinator)
 
     # RESTORE
-    restore_path = args.checkpoint_path.split(".")[0]
+    restore_path = args.checkpoint_path
     train_saver.restore(sess, restore_path)
 
     disp = sess.run(model.disp_left_est[0], feed_dict={left: input_images})
@@ -81,11 +82,14 @@ def test_simple(params):
     output_directory = os.path.dirname(args.image_path)
     output_name = os.path.splitext(os.path.basename(args.image_path))[0]
 
-    np.save(os.path.join(output_directory, "{}_disp.npy".format(output_name)), disp_pp)
-    disp_to_img = scipy.misc.imresize(disp_pp.squeeze(), [original_height, original_width])
-    plt.imsave(os.path.join(output_directory, "{}_disp.png".format(output_name)), disp_to_img, cmap='plasma')
+    #np.save(os.path.join(output_directory, "{}_disp.npy".format(output_name)), disp_pp)
+    disp_to_img = resize(disp_pp.squeeze(), (original_height, original_width))
+    #plt.imsave(os.path.join(output_directory, "{}_disp.png".format(output_name)), disp_to_img, cmap='plasma')
 
-    print('done!')
+    fig, (ax0, ax1) = plt.subplots(ncols=2, figsize=(20, 10))
+    ax0.imshow(input_image)
+    ax1.imshow(disp_to_img, cmap='plasma')
+    plt.show()
 
 def main(_):
 
